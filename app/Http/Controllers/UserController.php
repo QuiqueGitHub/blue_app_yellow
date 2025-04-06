@@ -17,10 +17,12 @@ class UserController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('role:Admin|Manager'),
+            new Middleware('permission:can-access-admin-panel'),
             new Middleware('permission:user-view', only: ['index']),
             new Middleware('permission:user-create', only: ['store']),
             new Middleware('permission:user-edit', only: ['update']),
             new Middleware('permission:user-delete', only: ['destroy']),
+            new Middleware('protect.last.admin', only: ['destroy']),
         ];
     }
     /**
@@ -37,7 +39,6 @@ class UserController extends Controller implements HasMiddleware
                 'user_create' => $request->user()?->can('user-create'), 
                 'user_edit' => $request->user()?->can('user-edit'),
                 'user_delete' => $request->user()?->can('user-delete'),
-                'access_admin_panel' => $request->user()?->can('can-access-admin-panel'), // Nuevo permiso
             ],
         ]);
     }
@@ -96,9 +97,10 @@ class UserController extends Controller implements HasMiddleware
         'password' => 'nullable|string|min:8',
         'phone' => 'nullable|string',
         'roles' => 'array',
+        'email_verified_at' => 'nullable|date',
     ]);
 
-    $data = $request->only(['name', 'email', 'phone']);
+    $data = $request->only(['name', 'email', 'phone','email_verified_at']);
     if ($request->password) {
         $data['password'] = $request->password;
     }
@@ -114,9 +116,22 @@ class UserController extends Controller implements HasMiddleware
      */
     public function destroy(User $user)
     {
+       $adminRole = app('adminRole');
+        // Verificar si el usuario a eliminar es Admin
+        if ($user->hasRole($adminRole->name)) {
+            // Contar cuántos usuarios tienen el rol Admin
+            $adminUsersCount = $adminRole->users()->count();
+            // Si solo queda 1 admin, no permitir eliminarlo
+            if ($adminUsersCount <= 1) {
+                return redirect()->back()
+                    ->with('error', 'No puedes eliminar al último administrador.');
+            }
+        }
+        // Eliminar el usuario
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'User Deleted Succesfully.');
-    }
+        return redirect()->route('users.index')
+            ->with('success', 'Usuario eliminado correctamente');
+        }
 
 }
 
