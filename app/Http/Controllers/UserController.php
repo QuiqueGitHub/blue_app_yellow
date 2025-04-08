@@ -60,11 +60,19 @@ class UserController extends Controller implements HasMiddleware
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:8',
-            'phone' => 'nullable|string',
+            'phone' => 'nullable|string|unique:users,phone',
             'roles' => 'array',
+            'phone.unique' => 'Ese número de teléfono ya está en uso por otro usuario.',
         ]);
 
-        $user = User::create($request->only(['name', 'email', 'phone', 'password']));
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+            'email_verified_at' => now() 
+        ]);
+        
         $user->syncRoles($request->roles);
 
         return redirect()->back()->with('success', 'User created successfully');
@@ -95,9 +103,10 @@ class UserController extends Controller implements HasMiddleware
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email,'.$user->id,
         'password' => 'nullable|string|min:8',
-        'phone' => 'nullable|string',
+        'phone' => 'nullable|string|unique:users,phone,' . $user->id,
         'roles' => 'array',
         'email_verified_at' => 'nullable|date',
+        'phone.unique' => 'Ese número de teléfono ya está en uso por otro usuario.',
     ]);
 
     $data = $request->only(['name', 'email', 'phone','email_verified_at']);
@@ -116,18 +125,6 @@ class UserController extends Controller implements HasMiddleware
      */
     public function destroy(User $user)
     {
-       $adminRole = app('adminRole');
-        // Verificar si el usuario a eliminar es Admin
-        if ($user->hasRole($adminRole->name)) {
-            // Contar cuántos usuarios tienen el rol Admin
-            $adminUsersCount = $adminRole->users()->count();
-            // Si solo queda 1 admin, no permitir eliminarlo
-            if ($adminUsersCount <= 1) {
-                return redirect()->back()
-                    ->with('error', 'No puedes eliminar al último administrador.');
-            }
-        }
-        // Eliminar el usuario
         $user->delete();
         return redirect()->route('users.index')
             ->with('success', 'Usuario eliminado correctamente');
