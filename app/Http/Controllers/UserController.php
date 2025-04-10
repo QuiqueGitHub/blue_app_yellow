@@ -125,6 +125,18 @@ class UserController extends Controller implements HasMiddleware
      */
     public function destroy(User $user)
     {
+
+        $adminRole = app('adminRole');
+        // Verificar si el usuario a eliminar es Admin
+        if ($user->hasRole($adminRole->name)) {
+            // Contar cuántos usuarios tienen el rol Admin
+            $adminUsersCount = $adminRole->users()->count();
+            // Si solo queda 1 admin, no permitir eliminarlo
+            if ($adminUsersCount <= 1) {
+                return redirect()->back()
+                    ->with('error', 'No puedes eliminar al último administrador.');
+            }
+        }
         $user->delete();
         return redirect()->route('users.index')
             ->with('success', 'Usuario eliminado correctamente');
