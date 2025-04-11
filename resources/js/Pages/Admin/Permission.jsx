@@ -54,7 +54,8 @@ export default function Permission({ activeRoute, can }) {
                         {can.permission_create && (
                             <button
                                 onClick={() => openModal()}
-                                className="flex items-center border border-gray-500 bg-white text-gray-600 text-sm px-3 py-1 rounded hover:bg-gray-100 transition"
+                                className="flex items-center border border-gray-500 bg-white 
+                                text-gray-600 text-sm px-3 py-1 rounded hover:bg-gray-100 transition"
                             >
                                 <PlusCircleIcon className="h-6 w-6 mr-2" />
                                 Add Permission

@@ -71,7 +71,9 @@ export default function User({ activeRoute, can }) {
                         {can.user_create && (
                             <button
                                 onClick={() => openModal()}
-                                className="flex items-center border border-gray-500 bg-white text-gray-600 text-sm px-3 py-1 rounded hover:bg-gray-100 transition"
+                                className="flex items-center border border-gray-500 
+                                bg-white text-gray-600 text-sm px-3 py-1 rounded
+                                 hover:bg-gray-100 transition"
                             >
                                 <PlusCircleIcon className="h-6 w-6 mr-2" />
                                 Add User
@@ -254,6 +256,7 @@ export default function User({ activeRoute, can }) {
                 closeModal={() => setIsModalOpen(false)}
                 user={selectedUser}
                 roles={roles}
+                users={users}
             />
         </AdminLayout>
     );
